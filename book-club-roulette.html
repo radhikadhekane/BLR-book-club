@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Club Roulette</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #F7F3ED;
+    --ink: #1A1410;
+    --warm: #8B4513;
+    --gold: #C8973A;
+    --gold-light: #E8C06A;
+    --muted: #6B5B4E;
+    --border: rgba(26,20,16,0.12);
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(200,151,58,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 90%, rgba(139,69,19,0.07) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; width: 100%; max-width: 640px; }
+
+  header { text-align: center; margin-bottom: 2.5rem; padding-top: 1rem; }
+
+  .eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.6rem;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 3.2rem);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 2rem 0;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .divider-icon { color: var(--gold); font-size: 16px; }
+
+  /* BOOK INPUTS */
+  .books-section { margin-bottom: 1.5rem; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .books-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .book-input-wrap {
+    position: relative;
+  }
+
+  .book-num {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--gold);
+    pointer-events: none;
+    z-index: 1;
+    line-height: 1;
+  }
+
+  .book-input {
+    width: 100%;
+    padding: 13px 14px 13px 36px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.7);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  .book-input::placeholder { color: rgba(107,91,78,0.45); font-weight: 300; }
+  .book-input:focus {
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 0 0 3px rgba(200,151,58,0.12);
+  }
+
+  /* SPIN BUTTON */
+  .spin-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px;
+    background: var(--ink);
+    color: var(--cream);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .spin-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(200,151,58,0.15) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .spin-btn:hover:not(:disabled) { background: #2d2016; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,20,16,0.18); }
+  .spin-btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+  .spin-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .spin-icon { font-size: 18px; transition: transform 0.3s; }
+  .spin-btn.spinning .spin-icon { animation: spinIcon 0.5s linear infinite; }
+  @keyframes spinIcon { to { transform: rotate(360deg); } }
+
+  /* WHEEL */
+  .wheel-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .wheel-outer {
+    position: relative;
+    width: 300px;
+    height: 300px;
+  }
+
+  .pointer-svg {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    filter: drop-shadow(0 2px 4px rgba(26,20,16,0.25));
+  }
+
+  #wheelCanvas {
+    border-radius: 50%;
+    box-shadow: 0 8px 32px rgba(26,20,16,0.18), 0 2px 8px rgba(26,20,16,0.1);
+    transition: transform 5s cubic-bezier(0.17, 0.67, 0.1, 1.0);
+    display: block;
+  }
+
+  /* RESULT */
+  .result-area {
+    text-align: center;
+    padding: 1.5rem;
+    background: rgba(255,255,255,0.75);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(8px);
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.4s, transform 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-area::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--warm), var(--gold));
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .result-area.has-result::before { opacity: 1; }
+
+  .result-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.1rem, 3.5vw, 1.5rem);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .result-placeholder {
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* FOOTER */
+  footer {
+    margin-top: 3rem;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(107,91,78,0.5);
+    font-weight: 300;
+  }
+  footer span { color: var(--gold); }
+
+  @media (max-width: 420px) {
+    .books-grid { grid-template-columns: 1fr; }
+    .wheel-outer { width: 260px; height: 260px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <p class="eyebrow">✦ Book Club ✦</p>
+    <h1>The Roulette</h1>
+    <p class="subtitle">Enter six titles, spin to decide your next read</p>
+  </header>
+
+  <div class="books-section">
+    <p class="section-label">This month's contenders</p>
+    <div class="books-grid" id="booksGrid">
+      <!-- inputs injected by JS -->
+    </div>
+  </div>
+
+  <button class="spin-btn" id="spinBtn" onclick="handleSpin()">
+    <span class="spin-icon">◎</span>
+    <span>Spin the wheel</span>
+  </button>
+
+  <div class="wheel-section">
+    <div class="wheel-outer" id="wheelOuter">
+      <svg class="pointer-svg" width="24" height="26" viewBox="0 0 24 26">
+        <polygon points="12,2 22,24 12,19 2,24" fill="#C8973A" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <canvas id="wheelCanvas" width="300" height="300"></canvas>
+    </div>
+  </div>
+
+  <div class="result-area" id="resultArea">
+    <p class="result-placeholder" id="resultPlaceholder">The wheel awaits...</p>
+    <p class="result-eyebrow" id="resultEyebrow" style="display:none">✦ Tonight's pick ✦</p>
+    <p class="result-title" id="resultTitle" style="display:none"></p>
+  </div>
+
+  <footer>Made with <span>♥</span> for your book club &nbsp;·&nbsp; Share the page link with your friends</footer>
+</div>
+
+<script>
+const DEFAULTS = [
+  "The Midnight Library",
+  "I Who Have Never Known Men",
+  "Second World",
+  "Museum of Failures",
+  "The Dallergut Dream Department Store",
+  ""
+];
+
+const COLORS = [
+  ["#8B4513","#E8C06A"],
+  ["#2C4A3E","#7EC8A4"],
+  ["#5C3D6E","#C4A8D8"],
+  ["#1A3A5C","#7FB3D8"],
+  ["#6B3A2A","#E8A882"],
+  ["#3A4A2C","#A8C878"],
+];
+
+let books = [...DEFAULTS];
+let spinning = false;
+let currentRot = 0;
+
+function buildInputs() {
+  const grid = document.getElementById('booksGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'book-input-wrap';
+    wrap.innerHTML = `
+      <span class="book-num">${i + 1}</span>
+      <input class="book-input" type="text" placeholder="Book title ${i + 1}" value="${books[i] || ''}" maxlength="60" oninput="updateBook(${i}, this.value)" />
+    `;
+    grid.appendChild(wrap);
+  }
+}
+
+function updateBook(i, val) {
+  books[i] = val;
+  drawWheel(currentRot);
+}
+
+function getActiveBooks() {
+  return books.filter(b => b.trim().length > 0);
+}
+
+function drawWheel(rotation) {
+  const canvas = document.getElementById('wheelCanvas');
+  const isMobile = window.innerWidth <= 420;
+  const size = isMobile ? 260 : 300;
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const cx = size / 2, cy = size / 2, r = size / 2 - 2;
+  const active = getActiveBooks();
+  const n = active.length;
+
+  if (n === 0) {
+    ctx.fillStyle = '#e0d8cf';
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = '#6B5B4E';
+    ctx.font = '14px DM Sans'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Add books above', cx, cy);
+    return;
+  }
+
+  const arc = (2 * Math.PI) / n;
+  for (let i = 0; i < n; i++) {
+    const start = rotation + i * arc - Math.PI / 2;
+    const end = start + arc;
+    const [bg, fg] = COLORS[i % COLORS.length];
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = bg;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(247,243,237,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc / 2);
+
+    const maxW = r * 0.72;
+    const label = active[i];
+    ctx.fillStyle = fg;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
+    let fontSize = n <= 3 ? 13 : 12;
+    ctx.font = `500 ${fontSize}px 'DM Sans', sans-serif`;
+    let text = label;
+    while (ctx.measureText(text).width > maxW && text.length > 4) {
+      text = text.slice(0, -1);
+    }
+    if (text !== label) text = text.trimEnd() + '…';
+    ctx.fillText(text, r - 12, 0);
+    ctx.restore();
+  }
+
+  // center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 22, 0, 2 * Math.PI);
+  ctx.fillStyle = '#F7F3ED';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(200,151,58,0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function handleSpin() {
+  if (spinning) return;
+  const active = getActiveBooks();
+  if (active.length < 2) {
+    alert('Please add at least 2 book titles to spin!');
+    return;
+  }
+
+  spinning = true;
+  const btn = document.getElementById('spinBtn');
+  btn.disabled = true;
+  btn.classList.add('spinning');
+  document.getElementById('resultPlaceholder').style.display = 'flex';
+  document.getElementById('resultEyebrow').style.display = 'none';
+  document.getElementById('resultTitle').style.display = 'none';
+  document.getElementById('resultArea').classList.remove('has-result');
+
+  const n = active.length;
+  const arc = (2 * Math.PI) / n;
+  const extraSpins = (6 + Math.floor(Math.random() * 5)) * 2 * Math.PI;
+  // pick a random sector
+  const pickedIdx = Math.floor(Math.random() * n);
+  // we want the pointer (top) to land in sector pickedIdx
+  // sector i spans [startRot + i*arc - PI/2, startRot + (i+1)*arc - PI/2]
+  // pointer at -PI/2 in canvas space. We want normalised angle to land in sector i.
+  // target: currentRot such that (-(currentRot) mod 2PI) in [i*arc, (i+1)*arc)
+  const sectorMid = (pickedIdx + 0.5) * arc;
+  const targetFinalRot = (2 * Math.PI - sectorMid) % (2 * Math.PI);
+  // choose the direction: go forward, making sure we overshoot by extraSpins
+  const startRot = currentRot % (2 * Math.PI);
+  let delta = targetFinalRot - startRot;
+  if (delta < 0) delta += 2 * Math.PI;
+  const totalRot = extraSpins + delta;
+
+  const duration = 5000;
+  const startTime = performance.now();
+  const startAngle = currentRot;
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 4);
+    const angle = startAngle + totalRot * ease;
+    currentRot = angle;
+    drawWheel(angle);
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      currentRot = startAngle + totalRot;
+      drawWheel(currentRot);
+      spinning = false;
+      btn.disabled = false;
+      btn.classList.remove('spinning');
+
+      document.getElementById('resultPlaceholder').style.display = 'none';
+      document.getElementById('resultEyebrow').style.display = 'block';
+      const titleEl = document.getElementById('resultTitle');
+      titleEl.style.display = 'block';
+      titleEl.textContent = active[pickedIdx];
+      document.getElementById('resultArea').classList.add('has-result');
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+buildInputs();
+drawWheel(0);
+window.addEventListener('resize', () => drawWheel(currentRot));
+</script>
+</body>
+</html>
